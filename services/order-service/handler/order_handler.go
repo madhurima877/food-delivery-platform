@@ -13,7 +13,8 @@ type OrderHandler struct {
 
 func (h *OrderHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
 	fmt.Println("CreateOrder called")
-
+	fmt.Println(req.CustomerId)
+	fmt.Println(req.RestaurantId)
 	return &pb.CreateOrderResponse{
 		OrderId: "1",
 		Status:  "CREATED",

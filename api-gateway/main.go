@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -10,12 +11,18 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type CreateOrderRequest struct {
+	CustomerID   string `json:"customer_id"`
+	RestaurantID string `json:"restaurant_id"`
+}
+
 func createOrderHandler(client pb.OrderServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		var req CreateOrderRequest
+		json.NewDecoder(r.Body).Decode(&req)
 		resp, err := client.CreateOrder(context.Background(), &pb.CreateOrderRequest{
-			CustomerId:   "123",
-			RestaurantId: "456",
+			CustomerId:   req.CustomerID,
+			RestaurantId: req.RestaurantID,
 		})
 
 		if err != nil {
