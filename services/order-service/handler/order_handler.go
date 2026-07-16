@@ -31,3 +31,34 @@ func (h *OrderHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderReque
 		Status:  "CREATED",
 	}, nil
 }
+
+func (h *OrderHandler) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
+	fmt.Println("GetOrder Called")
+	fmt.Println(req.OrderId)
+	Order, err := h.repo.GetOrder(req.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetOrderResponse{
+		OrderId:      Order.Id,
+		CustomerId:   Order.CustomerId,
+		RestaurantId: Order.RestaurantId,
+		Status:       Order.Status,
+	}, nil
+
+}
+
+func (h *OrderHandler) UpdateOrderStatus(ctx context.Context, req *pb.UpdateOrderStatusRequest) (*pb.UpdateOrderStatusResponse, error) {
+	fmt.Println("UpdateOrder Called")
+	fmt.Println(req.OrderId)
+	Order, err := h.repo.UpdateOrder(req.OrderId, req.Status)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.UpdateOrderStatusResponse{
+		OrderId:      Order.Id,
+		CustomerId:   Order.CustomerId,
+		RestaurantId: Order.RestaurantId,
+		Status:       Order.Status,
+	}, nil
+}
