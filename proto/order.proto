@@ -14,4 +14,15 @@ message CreateOrderResponse{
 
 service OrderService{
     rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+    rpc GetOrder(GetOrderRequest)returns(GetOrderResponse);
+}
+
+message GetOrderRequest{
+    string order_id=1;
+}
+message GetOrderResponse {
+  string order_id = 1;
+  string customer_id = 2;
+  string restaurant_id = 3;
+  string status = 4;
 }
