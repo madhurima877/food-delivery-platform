@@ -42,7 +42,7 @@ type UpdateOrderRequest struct {
 func UpdateOrderHandler(client pb.OrderServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req UpdateOrderRequest
-		json.NewDecoder(r.Body).Decode(req)
+		json.NewDecoder(r.Body).Decode(&req)
 		resp, err := client.UpdateOrderStatus(context.Background(), &pb.UpdateOrderStatusRequest{
 			OrderId: req.OrderId,
 			Status:  req.Status,
@@ -67,6 +67,18 @@ func GetOrderHandler(client pb.OrderServiceClient) http.HandlerFunc {
 	}
 
 }
+
+func DeleteOrderHandler(client pb.OrderServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		orderid := r.URL.Query().Get("order_id")
+		resp, err := client.DeleteOrder(context.Background(), &pb.DeleteOrderRequest{OrderId: orderid})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(resp)
+	}
+}
 func main() {
 	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -77,6 +89,7 @@ func main() {
 	http.HandleFunc("/orders", createOrderHandler(client))
 	http.HandleFunc("/get/order", GetOrderHandler(client))
 	http.HandleFunc("/update/status", UpdateOrderHandler(client))
+	http.HandleFunc("/delete/order", DeleteOrderHandler(client))
 	fmt.Println("API Gateway started on :8080")
 
 	http.ListenAndServe(":8080", nil)

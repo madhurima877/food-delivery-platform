@@ -15,7 +15,8 @@ message CreateOrderResponse{
 service OrderService{
     rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
     rpc GetOrder(GetOrderRequest)returns(GetOrderResponse);
-     rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+    rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+    rpc DeleteOrder(DeleteOrderRequest) returns (DeleteOrderResponse);
 }
 
 message GetOrderRequest{
@@ -36,4 +37,11 @@ message UpdateOrderStatusResponse{
   string customer_id = 2;
   string restaurant_id = 3;
   string status = 4;
+}
+message DeleteOrderRequest {
+  string order_id = 1;
+}
+
+message DeleteOrderResponse {
+    string message=1;
 }

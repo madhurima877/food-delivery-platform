@@ -57,11 +57,38 @@ func (repo *OrderRepository) GetOrder(orderId string) (*Order, error) {
 
 func (repo *OrderRepository) UpdateOrder(orderId, status string) (*Order, error) {
 	var order Order
-	sql := `Update orders SET status=$1 WHERE id=$2 RETURNING id, customer_id, restaurant_id, status`
-	err := repo.db.QueryRow(sql, orderId, status).Scan(order.Id, order.CustomerId, order.RestaurantId, order.Status)
+
+	sql := `
+		UPDATE orders
+		SET status = $1
+		WHERE id = $2
+		RETURNING id, customer_id, restaurant_id, status
+	`
+
+	err := repo.db.QueryRow(sql, status, orderId).Scan(
+		&order.Id,
+		&order.CustomerId,
+		&order.RestaurantId,
+		&order.Status,
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
 	return &order, nil
+}
+
+func (repo *OrderRepository) DeleteOrder(orderID string) (bool, error) {
+	sql := `DELETE FROM orders WHERE id = $1`
+
+	result, err := repo.db.Exec(sql, orderID)
+	if err != nil {
+		return false, err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return false, nil
+	}
+	return true, nil
 }

@@ -17,6 +17,22 @@ type OrderHandler struct {
 func NewOrderHandler(repo *repository.OrderRepository) *OrderHandler {
 	return &OrderHandler{repo: repo}
 }
+func (h *OrderHandler) DeleteOrder(ctx context.Context, req *pb.DeleteOrderRequest) (*pb.DeleteOrderResponse, error) {
+	fmt.Println("Delete Order Called")
+	isDeleted, err := h.repo.DeleteOrder(req.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	if !isDeleted {
+		return &pb.DeleteOrderResponse{
+			Message: "No Order Deleted",
+		}, nil
+	}
+
+	return &pb.DeleteOrderResponse{
+		Message: "Order Deleted",
+	}, nil
+}
 
 func (h *OrderHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
 	fmt.Println("CreateOrder called")
