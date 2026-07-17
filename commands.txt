@@ -1,0 +1,31 @@
+docker
+docker-compose up -d
+docker ps
+
+Terminal 2 — Order Service
+go run services/order-service/main.go
+
+Expected:
+
+Database Connected
+Order Service started on port 50051
+
+Terminal 3 — API Gateway
+go run api-gateway/main.go
+
+Expected:
+
+API Gateway started on :8080
+
+
+Quick health checks
+
+Create order:
+
+curl -X POST http://localhost:8080/orders \
+-H "Content-Type: application/json" \
+-d '{"customer_id":"101","restaurant_id":"22"}'
+
+Get order:
+
+curl "http://localhost:8080/get/order?order_id=1"
