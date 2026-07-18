@@ -4,7 +4,7 @@ docker ps
 
 Terminal 2 — Order Service
 go run services/order-service/main.go
-
+go run services/inventory-service/main.go
 Expected:
 
 Database Connected
@@ -29,3 +29,5 @@ curl -X POST http://localhost:8080/orders \
 Get order:
 
 curl "http://localhost:8080/get/order?order_id=1"
+
+docker exec -it food-delivery-postgres psql -U admin -d food_delivery

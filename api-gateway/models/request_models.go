@@ -13,3 +13,12 @@ type InventoryReserveRequest struct {
 	ProductId string `json:"product_id"`
 	Quantity  int32  `json:"quantity"`
 }
+type ProcessPaymentRequest struct {
+	OrderId string  `json:"order_id"`
+	Price   float32 `json:"price"`
+	UserId  string  `json:"user_id"`
+}
+type NotificationRequest struct {
+	UserId  string `json:"user_id"`
+	Message string `json:"message"`
+}

@@ -13,7 +13,7 @@ func NewInventoryRepository(db *sql.DB) *InventoryRepository {
 func (repo *InventoryRepository) ReserveStock(productID string, quantity int32) (bool, int32, error) {
 	var leftStock int32
 
-	sql := `
+	query := `
 		UPDATE inventory
 		SET
 			available_stock = available_stock - $1,
@@ -23,7 +23,10 @@ func (repo *InventoryRepository) ReserveStock(productID string, quantity int32) 
 		RETURNING available_stock
 	`
 
-	err := repo.db.QueryRow(sql, quantity, productID).Scan(&leftStock)
+	err := repo.db.QueryRow(query, quantity, productID).Scan(&leftStock)
+	if err == sql.ErrNoRows {
+		return false, 0, nil
+	}
 	if err != nil {
 		return false, 0, err
 	}

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/madhurima877/food-delivery-platform/api-gateway/handlers"
+	pbN "github.com/madhurima877/food-delivery-platform/proto/notification"
+	pbP "github.com/madhurima877/food-delivery-platform/proto/payment"
 
 	pbb "github.com/madhurima877/food-delivery-platform/proto/inventory"
 	pb "github.com/madhurima877/food-delivery-platform/proto/order"
@@ -40,6 +42,21 @@ func main() {
 		"/inventory/reserve",
 		handlers.ReserveStockHandler(inventoryClient),
 	)
+
+	paymentconn, err := grpc.NewClient("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	paymentClient := pbP.NewPaymentServiceClient(paymentconn)
+
+	http.HandleFunc("/payment", handlers.ProcessPaymentHandler(paymentClient))
+
+	notificationconn, err := grpc.NewClient("localhost:50054", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	notificationClient := pbN.NewNotificationServiceClient(notificationconn)
+	http.HandleFunc("/send/notification", handlers.SendNotificationHandler(notificationClient))
 
 	fmt.Println("API Gateway started on :8080")
 
