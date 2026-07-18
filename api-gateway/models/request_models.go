@@ -22,3 +22,8 @@ type NotificationRequest struct {
 	UserId  string `json:"user_id"`
 	Message string `json:"message"`
 }
+
+type DriverRequest struct {
+	OrderId  string `json:"order_id"`
+	DriverId string `json:"driver_id"`
+}

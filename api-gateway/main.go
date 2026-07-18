@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/madhurima877/food-delivery-platform/api-gateway/handlers"
+	pbD "github.com/madhurima877/food-delivery-platform/proto/driver"
 	pbN "github.com/madhurima877/food-delivery-platform/proto/notification"
 	pbP "github.com/madhurima877/food-delivery-platform/proto/payment"
 
@@ -57,6 +58,13 @@ func main() {
 	}
 	notificationClient := pbN.NewNotificationServiceClient(notificationconn)
 	http.HandleFunc("/send/notification", handlers.SendNotificationHandler(notificationClient))
+
+	driverconn, err := grpc.NewClient("localhost:50056", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	driverClient := pbD.NewDriverServiceClient(driverconn)
+	http.HandleFunc("/assign/driver", handlers.AssignDriverHandler(driverClient))
 
 	fmt.Println("API Gateway started on :8080")
 

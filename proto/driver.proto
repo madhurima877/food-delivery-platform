@@ -1,0 +1,14 @@
+syntax="proto3";
+package driver;
+option go_package="./proto/driver";
+service DriverService{
+    rpc AssignDriver(DriverRequest) returns (DriverResponse);
+}
+
+message DriverRequest{
+    string order_id=1;
+    string driver_id=2;
+}
+message DriverResponse{
+   string status=1;
+}
