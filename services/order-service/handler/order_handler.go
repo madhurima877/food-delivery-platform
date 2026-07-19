@@ -6,16 +6,18 @@ import (
 	"strconv"
 
 	pb "github.com/madhurima877/food-delivery-platform/proto/order"
+	orderKafka "github.com/madhurima877/food-delivery-platform/services/order-service/kafka"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/repository"
 )
 
 type OrderHandler struct {
 	repo *repository.OrderRepository
 	pb.UnimplementedOrderServiceServer
+	producer *orderKafka.Producer
 }
 
-func NewOrderHandler(repo *repository.OrderRepository) *OrderHandler {
-	return &OrderHandler{repo: repo}
+func NewOrderHandler(repo *repository.OrderRepository, producer *orderKafka.Producer) *OrderHandler {
+	return &OrderHandler{repo: repo, producer: producer}
 }
 func (h *OrderHandler) DeleteOrder(ctx context.Context, req *pb.DeleteOrderRequest) (*pb.DeleteOrderResponse, error) {
 	fmt.Println("Delete Order Called")
@@ -34,16 +36,37 @@ func (h *OrderHandler) DeleteOrder(ctx context.Context, req *pb.DeleteOrderReque
 	}, nil
 }
 
-func (h *OrderHandler) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+func (h *OrderHandler) CreateOrder(
+	ctx context.Context,
+	req *pb.CreateOrderRequest,
+) (*pb.CreateOrderResponse, error) {
+
 	fmt.Println("CreateOrder called")
 	fmt.Println(req.CustomerId)
 	fmt.Println(req.RestaurantId)
+	fmt.Println(req.ProductId)
+	fmt.Println(req.Quantity)
+
 	id, err := h.repo.CreateOrder(req.CustomerId, req.RestaurantId)
 	if err != nil {
 		return nil, err
 	}
+
+	idStr := strconv.FormatInt(id, 10)
+
+	err = h.producer.PublishOrderCreated(
+		idStr,
+		req.CustomerId,
+		req.RestaurantId,
+		req.ProductId,
+		req.Quantity,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.CreateOrderResponse{
-		OrderId: strconv.FormatInt(id, 10),
+		OrderId: idStr,
 		Status:  "CREATED",
 	}, nil
 }

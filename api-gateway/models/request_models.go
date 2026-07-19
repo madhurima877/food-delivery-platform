@@ -3,6 +3,8 @@ package models
 type CreateOrderRequest struct {
 	CustomerID   string `json:"customer_id"`
 	RestaurantID string `json:"restaurant_id"`
+	ProductID    string `json:"product_id"`
+	Quantity     int32  `json:"quantity"`
 }
 type UpdateOrderRequest struct {
 	OrderId string `json:"order_id"`
@@ -26,4 +28,18 @@ type NotificationRequest struct {
 type DriverRequest struct {
 	OrderId  string `json:"order_id"`
 	DriverId string `json:"driver_id"`
+}
+type OrderCreatedEvent struct {
+	OrderID      string `json:"order_id"`
+	CustomerID   string `json:"customer_id"`
+	RestaurantID string `json:"restaurant_id"`
+	ProductID    string `json:"product_id"`
+	Quantity     int32  `json:"quantity"`
+}
+type InventoryReservedEvent struct {
+	OrderID    string `json:"order_id"`
+	CustomerID string `json:"customer_id"`
+	ProductID  string `json:"product_id"`
+	Quantity   int32  `json:"quantity"`
+	TotalPrice int32  `json:"total_price"`
 }

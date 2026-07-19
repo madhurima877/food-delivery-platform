@@ -13,19 +13,30 @@ import (
 func CreateOrderHandler(client pb.OrderServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req models.CreateOrderRequest
-		json.NewDecoder(r.Body).Decode(&req)
-		resp, err := client.CreateOrder(context.Background(), &pb.CreateOrderRequest{
-			CustomerId:   req.CustomerID,
-			RestaurantId: req.RestaurantID,
-		})
+
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		resp, err := client.CreateOrder(
+			context.Background(),
+			&pb.CreateOrderRequest{
+				CustomerId:   req.CustomerID,
+				RestaurantId: req.RestaurantID,
+				ProductId:    req.ProductID,
+				Quantity:     req.Quantity,
+			},
+		)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		fmt.Fprintln(w, resp.OrderId, resp.Status)
 	}
-
 }
 
 func UpdateOrderHandler(client pb.OrderServiceClient) http.HandlerFunc {

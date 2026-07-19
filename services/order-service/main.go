@@ -7,7 +7,9 @@ import (
 	"github.com/madhurima877/food-delivery-platform/proto/order"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/db"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/handler"
+	"github.com/madhurima877/food-delivery-platform/services/order-service/kafka"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/repository"
+
 	"google.golang.org/grpc"
 )
 
@@ -16,8 +18,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer database.Close()
 
 	log.Println("Database Connected")
+
+	writer := kafka.NewProducer()
+	defer writer.Close()
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +34,7 @@ func main() {
 
 	repo := repository.NewOrderRepository(database)
 
-	orderHandler := handler.NewOrderHandler(repo)
+	orderHandler := handler.NewOrderHandler(repo, writer)
 
 	order.RegisterOrderServiceServer(grpcServer, orderHandler)
 

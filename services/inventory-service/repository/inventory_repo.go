@@ -33,3 +33,16 @@ func (repo *InventoryRepository) ReserveStock(productID string, quantity int32) 
 
 	return true, leftStock, nil
 }
+
+func (repo *InventoryRepository) GetProductPrice(productID string) (int, error) {
+	var price int
+
+	query := `SELECT price FROM products WHERE id = $1`
+
+	err := repo.db.QueryRow(query, productID).Scan(&price)
+	if err != nil {
+		return 0, err
+	}
+
+	return price, nil
+}

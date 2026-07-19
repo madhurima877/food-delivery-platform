@@ -31,3 +31,20 @@ Get order:
 curl "http://localhost:8080/get/order?order_id=1"
 
 docker exec -it food-delivery-postgres psql -U admin -d food_delivery
+
+curl -X POST http://localhost:8080/assign/driver \
+-H "Content-Type: application/json" \
+-d '{
+  "order_id":"1",
+  "driver_id":"50"
+}'
+
+Check Kafka logs:
+
+docker logs food-delivery-kafka
+
+For just the latest lines:
+
+docker logs --tail 20 food-delivery-kafka
+
+Or follow logs live:

@@ -2,9 +2,11 @@ syntax="proto3";
 package order;
 option go_package = "./proto/order";
 
-message CreateOrderRequest{
-    string customer_id=1;
-    string restaurant_id=2;
+message CreateOrderRequest {
+    string customer_id = 1;
+    string restaurant_id = 2;
+    string product_id = 3;
+    int32 quantity = 4;
 }
 
 message CreateOrderResponse{
