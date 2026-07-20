@@ -27,7 +27,8 @@ func (h *InventoryHandler) ReserveStock(
 	fmt.Println(req.ProductId)
 	fmt.Println(req.Quantity)
 
-	isUpdated, leftStock, err := h.repo.ReserveStock(
+	status, leftStock, err := h.repo.ReserveStock(
+		req.OrderId,
 		req.ProductId,
 		req.Quantity,
 	)
@@ -36,7 +37,14 @@ func (h *InventoryHandler) ReserveStock(
 		return nil, err
 	}
 
-	if !isUpdated {
+	if status == "DUPLICATE" {
+		return &pb.ReserveStockResponse{
+			Status:    "DUPLICATE",
+			LeftStock: 0,
+		}, nil
+	}
+
+	if status == "NOT_ENOUGH_STOCK" {
 		return &pb.ReserveStockResponse{
 			Status:    "NOT_ENOUGH_STOCK",
 			LeftStock: 0,
@@ -47,4 +55,5 @@ func (h *InventoryHandler) ReserveStock(
 		Status:    "RESERVED",
 		LeftStock: leftStock,
 	}, nil
+
 }

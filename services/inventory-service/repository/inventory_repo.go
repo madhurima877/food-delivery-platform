@@ -1,6 +1,10 @@
 package repository
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"log"
+)
 
 type InventoryRepository struct {
 	db *sql.DB
@@ -10,7 +14,37 @@ func NewInventoryRepository(db *sql.DB) *InventoryRepository {
 	return &InventoryRepository{db: db}
 }
 
-func (repo *InventoryRepository) ReserveStock(productID string, quantity int32) (bool, int32, error) {
+func (repo *InventoryRepository) ReserveStock(orderID string, productID string, quantity int32) (string, int32, error) {
+	if productID == "999" {
+		return "", 0, fmt.Errorf("simulated database error")
+	}
+
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return "", 0, err
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(`
+		INSERT INTO inventory_processed_events (order_id)
+		VALUES ($1)
+		ON CONFLICT (order_id) DO NOTHING
+	`, orderID)
+
+	if err != nil {
+		return "", 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", 0, err
+	}
+
+	if rowsAffected == 0 {
+		log.Println("Duplicate order skipped:", orderID)
+		return "DUPLICATE", 0, nil
+	}
+
 	var leftStock int32
 
 	query := `
@@ -23,15 +57,21 @@ func (repo *InventoryRepository) ReserveStock(productID string, quantity int32) 
 		RETURNING available_stock
 	`
 
-	err := repo.db.QueryRow(query, quantity, productID).Scan(&leftStock)
+	err = tx.QueryRow(query, quantity, productID).Scan(&leftStock)
+
 	if err == sql.ErrNoRows {
-		return false, 0, nil
-	}
-	if err != nil {
-		return false, 0, err
+		return "NOT_ENOUGH_STOCK", 0, nil
 	}
 
-	return true, leftStock, nil
+	if err != nil {
+		return "", 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return "", 0, err
+	}
+
+	return "RESERVED", leftStock, nil
 }
 
 func (repo *InventoryRepository) GetProductPrice(productID string) (int, error) {

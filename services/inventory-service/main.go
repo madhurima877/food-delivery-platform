@@ -48,7 +48,10 @@ func main() {
 	for i := 1; i <= 3; i++ {
 		wg.Add(1)
 		go consumer.ReadConsumer(ctx, &wg)
+
 	}
+	wg.Add(1)
+	go consumer.ReadRetryConsumer(ctx, &wg)
 	go func() {
 		log.Println("Inventory Service started on port 50052")
 		if err := grpcServer.Serve(lis); err != nil {

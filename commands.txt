@@ -51,8 +51,8 @@ Or follow logs live:
 
 
 go run services/order-service/main.go 
- go run services/inventory-service/main.go 
- go run services/payment-service/main.go 
- go run services/notification-service/main.go 
-  go run services/driver-service/main.go 
-   go run api-gateway/main.go 
+go run services/inventory-service/main.go 
+go run services/payment-service/main.go 
+go run services/notification-service/main.go 
+go run services/driver-service/main.go 
+go run api-gateway/main.go 
