@@ -43,3 +43,9 @@ type InventoryReservedEvent struct {
 	Quantity   int32  `json:"quantity"`
 	TotalPrice int32  `json:"total_price"`
 }
+type PaymentCompletedEvent struct {
+	OrderID    string  `json:"order_id"`
+	CustomerID string  `json:"customer_id"`
+	Amount     float32 `json:"amount"`
+	Status     string  `json:"status"`
+}
