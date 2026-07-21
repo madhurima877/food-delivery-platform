@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/madhurima877/food-delivery-platform/api-gateway/handlers"
+	"github.com/madhurima877/food-delivery-platform/api-gateway/ratelimit"
 	pbD "github.com/madhurima877/food-delivery-platform/proto/driver"
 	pbN "github.com/madhurima877/food-delivery-platform/proto/notification"
 	pbP "github.com/madhurima877/food-delivery-platform/proto/payment"
@@ -22,13 +23,15 @@ func main() {
 		panic(err)
 	}
 
+	ratelimiter := ratelimit.NewRateLimit()
+
 	//order
 	orderclient := pb.NewOrderServiceClient(orderconn)
 
-	http.HandleFunc("/orders", handlers.CreateOrderHandler(orderclient))
-	http.HandleFunc("/get/order", handlers.GetOrderHandler(orderclient))
-	http.HandleFunc("/update/status", handlers.UpdateOrderHandler(orderclient))
-	http.HandleFunc("/delete/order", handlers.DeleteOrderHandler(orderclient))
+	http.HandleFunc("/orders", ratelimiter.Middleware(handlers.CreateOrderHandler(orderclient)))
+	http.HandleFunc("/get/order", ratelimiter.Middleware(handlers.GetOrderHandler(orderclient)))
+	http.HandleFunc("/update/status", ratelimiter.Middleware(handlers.UpdateOrderHandler(orderclient)))
+	http.HandleFunc("/delete/order", ratelimiter.Middleware(handlers.DeleteOrderHandler(orderclient)))
 
 	//inventory service
 

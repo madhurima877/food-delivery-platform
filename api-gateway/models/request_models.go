@@ -49,3 +49,9 @@ type PaymentCompletedEvent struct {
 	Amount     float32 `json:"amount"`
 	Status     string  `json:"status"`
 }
+type Order struct {
+	Id           string
+	CustomerId   string
+	RestaurantId string
+	Status       string
+}

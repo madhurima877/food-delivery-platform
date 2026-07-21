@@ -2,17 +2,12 @@ package repository
 
 import (
 	"database/sql"
+
+	"github.com/madhurima877/food-delivery-platform/api-gateway/models"
 )
 
 type OrderRepository struct {
 	db *sql.DB
-}
-
-type Order struct {
-	Id           string
-	CustomerId   string
-	RestaurantId string
-	Status       string
 }
 
 func NewOrderRepository(db *sql.DB) *OrderRepository {
@@ -32,8 +27,8 @@ func (repo *OrderRepository) CreateOrder(customerID, restaurantID string) (int64
 	return id, nil
 }
 
-func (repo *OrderRepository) GetOrder(orderId string) (*Order, error) {
-	var order Order
+func (repo *OrderRepository) GetOrder(orderId string) (*models.Order, error) {
+	var order models.Order
 
 	sql := `
 		SELECT id, customer_id, restaurant_id, status
@@ -55,8 +50,8 @@ func (repo *OrderRepository) GetOrder(orderId string) (*Order, error) {
 	return &order, nil
 }
 
-func (repo *OrderRepository) UpdateOrder(orderId, status string) (*Order, error) {
-	var order Order
+func (repo *OrderRepository) UpdateOrder(orderId, status string) (*models.Order, error) {
+	var order models.Order
 
 	sql := `
 		UPDATE orders

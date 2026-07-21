@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 
 	"github.com/madhurima877/food-delivery-platform/proto/order"
+	"github.com/madhurima877/food-delivery-platform/services/order-service/cache"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/db"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/handler"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/kafka"
@@ -14,6 +16,14 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	redisCache := cache.NewRedisCache()
+	if err := redisCache.Ping(ctx); err != nil {
+		log.Fatal("Redis connection failed:", err)
+	}
+
+	log.Println("Redis Connected")
 	database, err := db.Connect()
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +44,7 @@ func main() {
 
 	repo := repository.NewOrderRepository(database)
 
-	orderHandler := handler.NewOrderHandler(repo, writer)
+	orderHandler := handler.NewOrderHandler(repo, writer, redisCache)
 
 	order.RegisterOrderServiceServer(grpcServer, orderHandler)
 
