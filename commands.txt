@@ -56,3 +56,5 @@ go run services/payment-service/main.go
 go run services/notification-service/main.go 
 go run services/driver-service/main.go 
 go run api-gateway/main.go 
+
+ protoc --go_out=. --go-grpc_out=. proto/order.proto

@@ -13,10 +13,11 @@ import (
 )
 
 type Consumer struct {
-	reader      *kafka.Reader
-	repo        *repository.InventoryRepository
-	producer    *Producer
-	retryReader *kafka.Reader
+	reader        *kafka.Reader
+	repo          *repository.InventoryRepository
+	producer      *Producer
+	retryReader   *kafka.Reader
+	restoreReader *kafka.Reader
 }
 
 func NewConsumer(repo *repository.InventoryRepository, writer *Producer) *Consumer {
@@ -31,7 +32,12 @@ func NewConsumer(repo *repository.InventoryRepository, writer *Producer) *Consum
 			Topic:   "order.created.retry",
 			GroupID: "inventory-retry-group",
 		})
-	return &Consumer{reader: reader, repo: repo, producer: writer, retryReader: retryReader}
+	restoreReader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{"localhost:19092"},
+		Topic:   "payment.failed",
+		GroupID: "inventory-payment-failed-group",
+	})
+	return &Consumer{reader: reader, repo: repo, producer: writer, retryReader: retryReader, restoreReader: restoreReader}
 }
 
 func (c *Consumer) ReadConsumer(ctx context.Context, wg *sync.WaitGroup) {
@@ -219,4 +225,30 @@ func (c *Consumer) ReadRetryConsumer(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}
 
+}
+
+func (c *Consumer) ReadRestoreConsumer(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			msg, err := c.restoreReader.ReadMessage(ctx)
+			if err != nil {
+				continue
+			}
+			var event models.PaymentFailedEvent
+			err = json.Unmarshal(msg.Value, &event)
+			if err != nil {
+				continue
+			}
+			log.Println("Payment failed event received")
+
+			err = c.repo.RestoreStock(event.ProductID, event.Quantity)
+			if err != nil {
+				continue
+			}
+		}
+	}
 }

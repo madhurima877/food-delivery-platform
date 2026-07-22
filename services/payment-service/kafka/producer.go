@@ -14,8 +14,7 @@ type Producer struct {
 
 func NewProducer() *Producer {
 	writer := &kafka.Writer{
-		Addr:  kafka.TCP("localhost:19092"),
-		Topic: "payment.completed",
+		Addr: kafka.TCP("localhost:19092"),
 	}
 	return &Producer{writer: writer}
 }
@@ -39,11 +38,31 @@ func (p *Producer) PublishEvent(OrderID, CustomerID, Status string, Amount float
 
 	err = p.writer.WriteMessages(
 		context.Background(),
-		kafka.Message{Value: eventByte},
-	)
+		kafka.Message{
+			Topic: "payment.completed",
+			Value: eventByte,
+		})
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (p *Producer) PublishFailedEvent(orderID string, customerID string, productID string, quantity int32) error {
+	event := models.PaymentFailedEvent{
+		OrderID:    orderID,
+		CustomerID: customerID,
+		ProductID:  productID,
+		Quantity:   quantity,
+	}
+	eventByte, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	return p.writer.WriteMessages(context.Background(), kafka.Message{
+		Value: eventByte,
+		Topic: "payment.failed",
+	})
+
 }

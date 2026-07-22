@@ -86,3 +86,15 @@ func (repo *InventoryRepository) GetProductPrice(productID string) (int, error) 
 
 	return price, nil
 }
+
+func (repo *InventoryRepository) RestoreStock(productID string, quantity int32) error {
+	query := `
+		UPDATE inventory
+		SET available_stock = available_stock + $1,
+		    reserved_stock = reserved_stock - $1
+		WHERE product_id = $2
+	`
+
+	_, err := repo.db.Exec(query, quantity, productID)
+	return err
+}

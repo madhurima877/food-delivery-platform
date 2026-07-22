@@ -93,7 +93,13 @@ func (c *Consumer) processPaymentEvent(ctx context.Context, event models.Invento
 
 	if !isCompleted {
 		log.Println("Payment failed for order:", event.OrderID)
+		err := c.producer.PublishFailedEvent(event.OrderID, event.CustomerID, event.ProductID, event.Quantity)
+		if err != nil {
+			log.Println("Error publishing payment.failed event:", err)
+			return
+		}
 		return
+
 	}
 	err = c.producer.PublishEvent(
 		event.OrderID,
