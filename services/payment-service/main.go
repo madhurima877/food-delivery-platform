@@ -13,6 +13,7 @@ import (
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/db"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/handler"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/kafka"
+	"github.com/madhurima877/food-delivery-platform/services/payment-service/lock"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/repository"
 	"google.golang.org/grpc"
 )
@@ -43,7 +44,9 @@ func main() {
 	defer cancel()
 	producer := kafka.NewProducer()
 	defer producer.Close()
-	consumer := kafka.NewConsumer(repo, producer)
+	redisLock := lock.NewRedisLock()
+
+	consumer := kafka.NewConsumer(repo, producer, redisLock)
 	var wg sync.WaitGroup
 	for i := 1; i <= 3; i++ {
 		wg.Add(1)
