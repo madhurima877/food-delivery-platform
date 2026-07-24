@@ -12,6 +12,9 @@ func NewPaymentRepository(db *sql.DB) *PaymentRepository {
 	return &PaymentRepository{db: db}
 }
 func (repo *PaymentRepository) ProcessPayment(orderID string, price float32, userID string) (bool, float32, error) {
+	if orderID == "23" {
+		return false, 0, nil
+	}
 	query := `
 		INSERT INTO payments (order_id, user_id, amount, status)
 		VALUES ($1, $2, $3, $4)

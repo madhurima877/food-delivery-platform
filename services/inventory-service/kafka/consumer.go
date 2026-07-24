@@ -245,7 +245,7 @@ func (c *Consumer) ReadRestoreConsumer(ctx context.Context, wg *sync.WaitGroup) 
 			}
 			log.Println("Payment failed event received")
 
-			err = c.repo.RestoreStock(event.ProductID, event.Quantity)
+			err = c.repo.RestoreStock(event.ProductID, event.Quantity, event.OrderID)
 			if err != nil {
 				continue
 			}

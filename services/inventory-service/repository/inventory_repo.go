@@ -23,7 +23,6 @@ func (repo *InventoryRepository) ReserveStock(orderID string, productID string, 
 	if err != nil {
 		return "", 0, err
 	}
-	defer tx.Rollback()
 
 	result, err := tx.Exec(`
 		INSERT INTO inventory_processed_events (order_id)
@@ -87,14 +86,38 @@ func (repo *InventoryRepository) GetProductPrice(productID string) (int, error) 
 	return price, nil
 }
 
-func (repo *InventoryRepository) RestoreStock(productID string, quantity int32) error {
-	query := `
+func (repo *InventoryRepository) RestoreStock(productID string, quantity int32, orderID string) error {
+
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	query := `INSERT INTO inventory_compensations (order_id) VALUES ($1) ON CONFLICT (order_id) DO NOTHING`
+	result, err := tx.Exec(query, orderID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return nil
+	}
+	query = `
 		UPDATE inventory
 		SET available_stock = available_stock + $1,
 		    reserved_stock = reserved_stock - $1
-		WHERE product_id = $2
+		WHERE product_id = $2 AND reserved_stock>=$1
 	`
 
-	_, err := repo.db.Exec(query, quantity, productID)
-	return err
+	_, err = tx.Exec(query, quantity, productID)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
