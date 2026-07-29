@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/madhurima877/food-delivery-platform/api-gateway/models"
 	"github.com/segmentio/kafka-go"
@@ -50,6 +51,8 @@ func (p *Producer) PublishEvent(OrderID, CustomerID, ProductID string, TotalPric
 
 }
 func (p *Producer) PublishRetryEvent(message []byte, retryCount int) error {
+	delay := time.Duration(1<<(retryCount-1)) * time.Second
+	time.Sleep(delay)
 	msg := kafka.Message{
 		Value: message,
 		Topic: "order.created.retry",

@@ -81,7 +81,7 @@ func (c *Consumer) processPaymentEvent(ctx context.Context, event models.Invento
 			log.Println("Error releasing payment lock:", err)
 		}
 	}()
-	isCompleted, price, err := c.repo.ProcessPayment(
+	status, price, err := c.repo.ProcessPayment(
 		event.OrderID,
 		float32(event.TotalPrice),
 		event.CustomerID,
@@ -90,8 +90,11 @@ func (c *Consumer) processPaymentEvent(ctx context.Context, event models.Invento
 		log.Println("Payment error:", err)
 		return
 	}
-
-	if !isCompleted {
+	if status == "DUPLICATE" {
+		log.Println("Duplicate payment event ignored for order:", event.OrderID)
+		return
+	}
+	if status == "FAILED" {
 		log.Println("Payment failed for order:", event.OrderID)
 		err := c.producer.PublishFailedEvent(event.OrderID, event.CustomerID, event.ProductID, event.Quantity)
 		if err != nil {

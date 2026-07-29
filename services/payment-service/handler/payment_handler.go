@@ -24,7 +24,7 @@ func (h *PaymentHandler) ProcessPayment(
 
 	fmt.Println("Process Payment Called")
 
-	isCompleted, price, err := h.repo.ProcessPayment(
+	status, price, err := h.repo.ProcessPayment(
 		req.OrderId,
 		req.Price,
 		req.UserId,
@@ -33,9 +33,16 @@ func (h *PaymentHandler) ProcessPayment(
 		return nil, err
 	}
 
-	if isCompleted {
+	if status == "COMPLETED" {
 		return &pb.ProcessPaymentResponse{
 			Status: "PaymentDone",
+			Price:  price,
+		}, nil
+	}
+
+	if status == "DUPLICATE" {
+		return &pb.ProcessPaymentResponse{
+			Status: "PaymentAlreadyProcessed",
 			Price:  price,
 		}, nil
 	}
