@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/madhurima877/food-delivery-platform/proto/order"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/cache"
@@ -11,6 +12,7 @@ import (
 	"github.com/madhurima877/food-delivery-platform/services/order-service/handler"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/kafka"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/repository"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"google.golang.org/grpc"
 )
@@ -49,6 +51,15 @@ func main() {
 	order.RegisterOrderServiceServer(grpcServer, orderHandler)
 
 	log.Println("Order Service started on port 50051")
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Println("Metrics server started on port 9091")
+		if err := http.ListenAndServe(":9091", nil); err != nil {
+			log.Println("Metrics server error:", err)
+		}
+
+	}()
+
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal(err)
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	pb "github.com/madhurima877/food-delivery-platform/proto/payment"
+	"github.com/madhurima877/food-delivery-platform/services/payment-service/metrics"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/repository"
 )
 
@@ -34,6 +35,7 @@ func (h *PaymentHandler) ProcessPayment(
 	}
 
 	if status == "COMPLETED" {
+		metrics.PaymentsCompleted.Inc()
 		return &pb.ProcessPaymentResponse{
 			Status: "PaymentDone",
 			Price:  price,
@@ -47,6 +49,10 @@ func (h *PaymentHandler) ProcessPayment(
 		}, nil
 	}
 
+	if status == "FAILED" {
+		metrics.PaymentsFailed.Inc()
+
+	}
 	return &pb.ProcessPaymentResponse{
 		Status: "PaymentFailed",
 		Price:  price,

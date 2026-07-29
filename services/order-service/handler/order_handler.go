@@ -10,6 +10,7 @@ import (
 	pb "github.com/madhurima877/food-delivery-platform/proto/order"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/cache"
 	orderKafka "github.com/madhurima877/food-delivery-platform/services/order-service/kafka"
+	"github.com/madhurima877/food-delivery-platform/services/order-service/metrics"
 	"github.com/madhurima877/food-delivery-platform/services/order-service/repository"
 )
 
@@ -53,6 +54,7 @@ func (h *OrderHandler) CreateOrder(
 
 	id, err := h.repo.CreateOrder(req.CustomerId, req.RestaurantId)
 	if err != nil {
+		metrics.OrderCreationErrors.Inc()
 		return nil, err
 	}
 
@@ -66,9 +68,10 @@ func (h *OrderHandler) CreateOrder(
 		req.Quantity,
 	)
 	if err != nil {
+		metrics.OrderCreationErrors.Inc()
 		return nil, err
 	}
-
+	metrics.OrdersCreated.Inc()
 	return &pb.CreateOrderResponse{
 		OrderId: idStr,
 		Status:  "CREATED",

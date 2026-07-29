@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/kafka"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/lock"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/repository"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
@@ -52,6 +54,15 @@ func main() {
 		wg.Add(1)
 		go consumer.ReadConsumer(ctx, &wg)
 	}
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Println("Payment metrics server started on port 9092")
+
+		if err := http.ListenAndServe(":9092", nil); err != nil {
+			log.Println("Metrics server error:", err)
+		}
+	}()
+
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/madhurima877/food-delivery-platform/api-gateway/models"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/lock"
+	"github.com/madhurima877/food-delivery-platform/services/payment-service/metrics"
 	"github.com/madhurima877/food-delivery-platform/services/payment-service/repository"
 	"github.com/segmentio/kafka-go"
 )
@@ -65,6 +66,10 @@ func (c *Consumer) ReadConsumer(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (c *Consumer) processPaymentEvent(ctx context.Context, event models.InventoryReservedEvent) {
+	start := time.Now()
+	defer func() {
+		metrics.PaymentProcessingDuration.Observe(float64(time.Since(start).Seconds()))
+	}()
 	acquired, err := c.lock.Acquire(ctx, event.OrderID)
 	if err != nil {
 		log.Println("Error acquiring payment lock:", err)
@@ -87,6 +92,7 @@ func (c *Consumer) processPaymentEvent(ctx context.Context, event models.Invento
 		event.CustomerID,
 	)
 	if err != nil {
+
 		log.Println("Payment error:", err)
 		return
 	}
@@ -95,6 +101,7 @@ func (c *Consumer) processPaymentEvent(ctx context.Context, event models.Invento
 		return
 	}
 	if status == "FAILED" {
+		metrics.PaymentsFailed.Inc()
 		log.Println("Payment failed for order:", event.OrderID)
 		err := c.producer.PublishFailedEvent(event.OrderID, event.CustomerID, event.ProductID, event.Quantity)
 		if err != nil {
@@ -104,6 +111,7 @@ func (c *Consumer) processPaymentEvent(ctx context.Context, event models.Invento
 		return
 
 	}
+	metrics.PaymentsCompleted.Inc()
 	err = c.producer.PublishEvent(
 		event.OrderID,
 		event.CustomerID,

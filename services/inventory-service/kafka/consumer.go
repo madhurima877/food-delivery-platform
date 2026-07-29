@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/madhurima877/food-delivery-platform/api-gateway/models"
+	"github.com/madhurima877/food-delivery-platform/services/inventory-service/metrics"
 	"github.com/madhurima877/food-delivery-platform/services/inventory-service/repository"
 	"github.com/segmentio/kafka-go"
 )
@@ -71,6 +72,7 @@ func (c *Consumer) ReadConsumer(ctx context.Context, wg *sync.WaitGroup) {
 				event.Quantity,
 			)
 			if err != nil {
+				metrics.InventoryFailures.Inc()
 				log.Println("Error reserving stock:", err)
 				retryCount++
 
@@ -87,9 +89,11 @@ func (c *Consumer) ReadConsumer(ctx context.Context, wg *sync.WaitGroup) {
 			}
 
 			if status == "NOT_ENOUGH_STOCK" {
+				metrics.InventoryFailures.Inc()
 				log.Println("Not enough stock for order:", event.OrderID)
 				continue
 			}
+			metrics.InventoryReservations.Inc()
 			price, err := c.repo.GetProductPrice(event.ProductID)
 			if err != nil {
 				log.Println("Error getting price for product:", event.ProductID, err)
